@@ -1,0 +1,89 @@
+{% extends "layout.html" %} {% block content %}
+<div class="container py-4">
+  <h1 class="text-4xl font-bold text-text-primary" id="recap-text">
+    {{ month }}, {{year}} Recap
+  </h1>
+  <p class="mt-2 text-md text-text-secondary">
+    Summary of new clients and financials for
+    <font id="recap-secondary-text">{{ month }}</font>.
+  </p>
+
+  <div class="cards-container mt-8">
+    <div class="card flex-col justify-start items-center gap-8">
+      <h2 class="font-bold text-text-primary text-lg">Total Clients</h2>
+      <p class="text-3xl font-semibold text-accent" id="total-clients">
+        {{clients}}
+      </p>
+    </div>
+    <div class="card flex-col justify-start items-center gap-8">
+      <h2 class="font-bold text-text-primary text-lg">Total Services</h2>
+      <p class="text-3xl font-semibold text-accent" id="total-services">
+        {{services}}
+      </p>
+    </div>
+    <div class="card flex-col justify-start items-center gap-8">
+      <h2 class="font-bold text-text-primary text-lg">Total Earnings</h2>
+      <p class="text-3xl font-semibold text-accent" id="total-earnings">
+        ${{sum_of_earnings}} JOD
+      </p>
+    </div>
+  </div>
+  <div class="flex gap-8 items-center justify-center w-full h-fit mt-4">
+    <div class="flex w-full h-fit items-center justify-end gap-2">
+      <button
+        class="bg-surface/40 rounded-lg p-2 text-center text-text-primary hover:bg-surface hover:cursor-pointer transition-all duration-200"
+        id="prev-btn"
+      >
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <p class="text-text-primary text-sm">Prev</p>
+    </div>
+    <div class="flex w-full h-fit items-center justify-start gap-2">
+      <p class="text-text-primary text-sm">Next</p>
+      <button
+        class="bg-surface/40 rounded-lg p-2 text-center text-text-primary hover:bg-surface hover:cursor-pointer transition-all duration-200"
+        id="next-btn"
+      >
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+  <h2 class="font-bold text-text-primary text-4xl mt-12">Recent Activity</h2>
+  <p class="mt-2 text-md text-text-secondary">
+    Summary of the last 5 activities.
+  </p>
+  {%if last_activities %}
+  <div
+    class="w-full h-fit flex flex-col py-4 px-2 justify-start items-start"
+  >
+    {% for activity in last_activities %}
+    <div
+      class="w-full h-fit flex flex-col gap-2 p-2 justify-start items-start mt-2 border border-surface rounded-lg hover:bg-surface/40 bg-surface transition-all duration-300"
+    >
+      <h3 class="text-accent text-lg font-bold">{{ activity.action_type }}</h3>
+      <p class="text-text-secondary text-xs">
+        Description: {{ activity.description }}
+      </p>
+      <p class="text-text-secondary text-xs">
+        Timestamp: {{ activity.timestamp }}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+  {%else %}
+  <div
+    class="w-full h-fit flex flex-col gap-2 py-4 px-2 justify-start items-center mt-12"
+  >
+    <h2 class="font-bold text-text-primary text-4xl">No Recent Activity</h2>
+    <p class="mt-2 text-md text-text-secondary">
+      There are no recent activities to display.
+    </p>
+  </div>
+  {% endif %}
+  <script>
+    let currentMonth = `{{month}}`;
+    let currentYear = `{{year}}`;
+  </script>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+  {% endblock %}
+</div>

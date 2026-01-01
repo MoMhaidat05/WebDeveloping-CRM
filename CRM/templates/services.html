@@ -1,0 +1,1012 @@
+{% extends "layout.html" %} {% block content %}
+<div
+  id="toast-container"
+  class="fixed top-5 right-5 z-50 flex flex-col gap-2"
+></div>
+
+<div class="space-y-6">
+  <div
+    class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+  >
+    <div>
+      <h1 class="text-2xl font-bold text-text-primary">Services</h1>
+      <p class="text-text-secondary text-sm mt-1">
+        Manage domains, hosting, and technical projects
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3 w-full md:w-auto">
+      <div class="relative group w-full md:w-64">
+        <i
+          class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary group-focus-within:text-accent transition-colors"
+        ></i>
+        <input
+          type="text"
+          placeholder="Search services..."
+          class="w-full bg-surface border border-border text-text-primary text-sm rounded-lg pl-10 pr-4 py-2.5 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+        />
+      </div>
+
+      <button
+        onclick="openAddModal()"
+        class="bg-accent hover:cursor-pointer hover:bg-emerald-600 text-bg font-medium px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-accent/20 whitespace-nowrap"
+      >
+        <i class="fa-solid fa-plus"></i>
+        <span>New Service</span>
+      </button>
+    </div>
+  </div>
+
+  <div
+    class="bg-surface rounded-xl border border-border shadow-xl overflow-hidden"
+  >
+    {% if services %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-bg/50 border-b border-border">
+            <th
+              class="p-4 text-xs font-semibold tracking-wide text-text-secondary uppercase"
+            >
+              Domain Info
+            </th>
+            <th
+              class="p-4 text-xs font-semibold tracking-wide text-text-secondary uppercase"
+            >
+              Client
+            </th>
+            <th
+              class="p-4 text-xs font-semibold tracking-wide text-text-secondary uppercase"
+            >
+              Hosting Details
+            </th>
+            <th
+              class="p-4 text-xs font-semibold tracking-wide text-text-secondary uppercase"
+            >
+              Expirations
+            </th>
+            <th
+              class="p-4 text-xs font-semibold tracking-wide text-text-secondary uppercase"
+            >
+              Tech Stack
+            </th>
+            <th
+              class="p-4 text-xs font-semibold tracking-wide text-text-secondary uppercase text-right"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          {% for service in services %}
+          <tr
+            id="service-row-{{ service.id }}"
+            class="group hover:bg-white/5 transition-colors duration-200"
+          >
+            <td class="p-4 align-top">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center font-bold border border-accent/20 flex-shrink-0"
+                >
+                  <i class="fa-solid fa-globe"></i>
+                </div>
+                <div>
+                  <h3
+                    class="font-bold text-text-primary group-hover:text-accent transition-colors"
+                  >
+                    {{ service.domain_name }}
+                  </h3>
+                  {% if service.domain_registrar %}
+                  <span class="text-xs text-text-secondary block"
+                    >{{ service.domain_registrar }}</span
+                  >
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+
+            <td class="p-4 align-top">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-user-tie text-text-secondary text-xs"></i>
+                <span class="text-text-primary font-medium"
+                  >{{ service.client.full_name }}</span
+                >
+              </div>
+            </td>
+
+            <td class="p-4 align-top">
+              <div class="text-sm text-text-primary">
+                {{ service.hosting_provider or '-' }}
+              </div>
+              {% if service.server_ip %}
+              <div class="text-xs text-text-secondary mt-1 font-mono">
+                {{ service.server_ip }}:{{ service.ssh_port }}
+              </div>
+              {% endif %}
+            </td>
+
+            <td class="p-4 align-top">
+              <div class="flex flex-col gap-1">
+                {% if service.domain_expiry_date %}
+                <div
+                  class="text-xs flex items-center gap-2 text-text-secondary"
+                >
+                  <i class="fa-solid fa-tag w-4"></i>
+                  <span>Dom: {{ service.domain_expiry_date }}</span>
+                </div>
+                {% endif %} {% if service.hosting_expiry_date %}
+                <div
+                  class="text-xs flex items-center gap-2 text-text-secondary"
+                >
+                  <i class="fa-solid fa-server w-4"></i>
+                  <span>Host: {{ service.hosting_expiry_date }}</span>
+                </div>
+                {% endif %} {% if not service.domain_expiry_date and not
+                service.hosting_expiry_date %}
+                <span class="text-text-secondary text-xs">-</span>
+                {% endif %}
+              </div>
+            </td>
+
+            <td class="p-4 align-middle">
+              {% if service.tech_stack %}
+              <span
+                class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-bg border border-border text-text-secondary"
+              >
+                {{ service.tech_stack }}
+              </span>
+              {% else %}
+              <span class="text-text-secondary text-xs">-</span>
+              {% endif %}
+            </td>
+
+            <td class="p-4 align-middle text-right">
+              <div
+                class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <button
+                  onclick="openEditModal(
+                            '{{ service.id }}', 
+                            '{{ service.client_id }}', 
+                            '{{ service.domain_name }}', 
+                            '{{ service.domain_registrar or '' }}', 
+                            '{{ service.domain_expiry_date or '' }}', 
+                            '{{ service.hosting_provider or '' }}', 
+                            '{{ service.server_ip or '' }}', 
+                            '{{ service.ssh_port }}', 
+                            '{{ service.hosting_expiry_date or '' }}', 
+                            '{{ service.tech_stack or '' }}', 
+                            `{{ service.description or '' }}`, 
+                            '{{ service.start_date }}', 
+                            '{{ service.end_date or '' }}'
+                        )"
+                  class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-all"
+                  title="Edit"
+                >
+                  <i class="fa-solid fa-pen text-xs"></i>
+                </button>
+                <button
+                  onclick="openDeleteModal('{{ service.id }}')"
+                  class="w-8 h-8 rounded-lg flex items-center justify-center bg-danger/10 text-danger hover:bg-danger hover:text-white transition-all"
+                  title="Delete"
+                >
+                  <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div
+      class="p-4 border-t border-border flex items-center justify-between text-xs text-text-secondary"
+    >
+      <span id="services-length">Showing {{ services|length }} services</span>
+      <div class="flex gap-1">
+        <button
+          class="px-2 py-1 rounded hover:bg-bg disabled:opacity-50"
+          disabled
+        >
+          Previous
+        </button>
+        <button class="px-2 py-1 rounded hover:bg-bg">Next</button>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-16 text-center">
+      <div
+        class="w-20 h-20 bg-bg rounded-full flex items-center justify-center mb-4 shadow-inner"
+      >
+        <i class="fa-solid fa-server text-3xl text-text-secondary/50"></i>
+      </div>
+      <h3 class="text-lg font-medium text-text-primary mb-1">
+        No services found
+      </h3>
+      <p class="text-text-secondary text-sm max-w-xs mb-6">
+        Start by adding domains or hosting plans.
+      </p>
+      <button
+        onclick="openAddModal()"
+        class="bg-surface border border-border hover:border-accent text-accent px-6 py-2 rounded-lg text-sm font-medium hover:cursor-pointer transition-colors"
+      >
+        <i class="fa-solid fa-plus mr-2"></i> Add New Service
+      </button>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Add Modal -->
+<div
+  id="addModal"
+  class="fixed inset-0 z-50 hidden"
+  aria-labelledby="modal-title"
+  role="dialog"
+  aria-modal="true"
+>
+  <div
+    class="fixed inset-0 bg-black/60 transition-opacity backdrop-blur-sm"
+    onclick="closeAddModal()"
+  ></div>
+  <div class="fixed inset-0 z-10 overflow-y-auto">
+    <div
+      class="flex min-h-full items-center justify-center p-4 text-center sm:p-0"
+    >
+      <div
+        class="relative transform overflow-hidden rounded-xl bg-surface border border-border text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl"
+      >
+        <div
+          class="px-6 py-4 border-b border-border flex justify-between items-center bg-bg/30"
+        >
+          <h3 class="text-lg font-bold text-text-primary">Add New Service</h3>
+          <button
+            onclick="closeAddModal()"
+            class="text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+
+        <form id="addServiceForm" onsubmit="handleAddSubmit(event)">
+          <div class="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Client Select -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Client <span class="text-danger">*</span></label
+              >
+              <select
+                name="client_id"
+                id="add_client_select"
+                required
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              >
+                <option value="" disabled selected>Select a Client...</option>
+                <!-- JS Populated -->
+              </select>
+            </div>
+
+            <!-- Domain Info -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Domain Name <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                name="domain_name"
+                required
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+                placeholder="example.com"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Registrar</label
+              >
+              <input
+                type="text"
+                name="domain_registrar"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+                placeholder="Namecheap"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Domain Expiry</label
+              >
+              <input
+                type="date"
+                name="domain_expiry_date"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <!-- Hosting Info -->
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Hosting Provider</label
+              >
+              <input
+                type="text"
+                name="hosting_provider"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+                placeholder="Hostinger"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Hosting Expiry</label
+              >
+              <input
+                type="date"
+                name="hosting_expiry_date"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Server IP</label
+              >
+              <input
+                type="text"
+                name="server_ip"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+                placeholder="192.168.1.1"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >SSH Port</label
+              >
+              <input
+                type="number"
+                name="ssh_port"
+                value="22"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <!-- Tech & Dates -->
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Tech Stack</label
+              >
+              <input
+                type="text"
+                name="tech_stack"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+                placeholder="Flask, React..."
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Start Date <span class="text-danger">*</span></label
+              >
+              <input
+                type="date"
+                name="start_date"
+                required
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <!-- Description -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Description</label
+              >
+              <textarea
+                name="description"
+                rows="2"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent resize-none"
+              ></textarea>
+            </div>
+          </div>
+          <div
+            class="px-6 py-4 bg-bg/30 border-t border-border flex flex-row-reverse gap-3"
+          >
+            <button
+              type="submit"
+              class="w-full sm:w-auto inline-flex justify-center rounded-lg bg-accent px-4 py-2 text-sm font-bold text-bg shadow-sm hover:bg-emerald-600 sm:ml-3"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onclick="closeAddModal()"
+              class="mt-3 sm:mt-0 w-full sm:w-auto inline-flex justify-center rounded-lg bg-transparent border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-bg hover:text-text-primary"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div
+  id="editModal"
+  class="fixed inset-0 z-50 hidden"
+  aria-labelledby="modal-title"
+  role="dialog"
+  aria-modal="true"
+>
+  <div
+    class="fixed inset-0 bg-black/60 transition-opacity backdrop-blur-sm"
+    onclick="closeEditModal()"
+  ></div>
+  <div class="fixed inset-0 z-10 overflow-y-auto">
+    <div
+      class="flex min-h-full items-center justify-center p-4 text-center sm:p-0"
+    >
+      <div
+        class="relative transform overflow-hidden rounded-xl bg-surface border border-border text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl"
+      >
+        <div
+          class="px-6 py-4 border-b border-border flex justify-between items-center bg-bg/30"
+        >
+          <h3 class="text-lg font-bold text-text-primary">Edit Service</h3>
+          <button
+            onclick="closeEditModal()"
+            class="text-text-secondary hover:text-text-primary transition-colors"
+          >
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+
+        <form id="editServiceForm" onsubmit="handleEditSubmit(event)">
+          <input type="hidden" id="edit_service_id" name="id" />
+          <div class="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Client <span class="text-danger">*</span></label
+              >
+              <select
+                name="client_id"
+                id="edit_client_select"
+                required
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              >
+                <!-- JS Populated -->
+              </select>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Domain Name <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                id="edit_domain_name"
+                name="domain_name"
+                required
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Registrar</label
+              >
+              <input
+                type="text"
+                id="edit_domain_registrar"
+                name="domain_registrar"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Domain Expiry</label
+              >
+              <input
+                type="date"
+                id="edit_domain_expiry_date"
+                name="domain_expiry_date"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Hosting Provider</label
+              >
+              <input
+                type="text"
+                id="edit_hosting_provider"
+                name="hosting_provider"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Hosting Expiry</label
+              >
+              <input
+                type="date"
+                id="edit_hosting_expiry_date"
+                name="hosting_expiry_date"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Server IP</label
+              >
+              <input
+                type="text"
+                id="edit_server_ip"
+                name="server_ip"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >SSH Port</label
+              >
+              <input
+                type="number"
+                id="edit_ssh_port"
+                name="ssh_port"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Tech Stack</label
+              >
+              <input
+                type="text"
+                id="edit_tech_stack"
+                name="tech_stack"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Start Date <span class="text-danger">*</span></label
+              >
+              <input
+                type="date"
+                id="edit_start_date"
+                name="start_date"
+                required
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-secondary mb-1"
+                >Description</label
+              >
+              <textarea
+                id="edit_description"
+                name="description"
+                rows="2"
+                class="w-full bg-bg border border-border rounded-lg px-4 py-2.5 text-text-primary focus:outline-none focus:border-accent resize-none"
+              ></textarea>
+            </div>
+          </div>
+          <div
+            class="px-6 py-4 bg-bg/30 border-t border-border flex flex-row-reverse gap-3"
+          >
+            <button
+              type="submit"
+              class="w-full sm:w-auto inline-flex justify-center rounded-lg bg-accent px-4 py-2 text-sm font-bold text-bg shadow-sm hover:bg-emerald-600 sm:ml-3"
+            >
+              Update
+            </button>
+            <button
+              type="button"
+              onclick="closeEditModal()"
+              class="mt-3 sm:mt-0 w-full sm:w-auto inline-flex justify-center rounded-lg bg-transparent border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-bg hover:text-text-primary"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden">
+  <div
+    class="fixed inset-0 bg-black/60 transition-opacity backdrop-blur-sm"
+    onclick="closeDeleteModal()"
+  ></div>
+  <div class="fixed inset-0 z-10 overflow-y-auto">
+    <div
+      class="flex min-h-full items-center justify-center p-4 text-center sm:p-0"
+    >
+      <div
+        class="relative transform overflow-hidden rounded-xl bg-surface border border-border text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md"
+      >
+        <div class="px-6 py-6 text-center">
+          <div
+            class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-danger/10 mb-4"
+          >
+            <i class="fa-solid fa-triangle-exclamation text-danger text-xl"></i>
+          </div>
+          <h3 class="text-lg font-bold text-text-primary mb-2">
+            Delete Service?
+          </h3>
+          <p class="text-sm text-text-secondary">
+            Are you sure you want to delete this service? This action cannot be
+            undone.
+          </p>
+        </div>
+        <div
+          class="px-6 py-4 bg-bg/30 border-t border-border flex flex-row-reverse gap-3"
+        >
+          <form
+            id="deleteServiceForm"
+            onsubmit="handleDeleteSubmit(event)"
+            class="w-full sm:w-auto"
+          >
+            <input type="hidden" id="delete_service_id" name="id" />
+            <button
+              type="submit"
+              class="w-full inline-flex justify-center rounded-lg bg-danger px-4 py-2 text-sm font-bold text-white hover:bg-red-600 sm:ml-3"
+            >
+              Delete
+            </button>
+          </form>
+          <button
+            type="button"
+            onclick="closeDeleteModal()"
+            class="mt-3 sm:mt-0 w-full sm:w-auto inline-flex justify-center rounded-lg bg-transparent border border-border px-4 py-2 text-sm font-medium text-text-secondary hover:bg-bg hover:text-text-primary"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- Global Data ---
+  let clientMap = {}; // Helper to store client names by ID
+
+  // --- Init ---
+  document.addEventListener("DOMContentLoaded", async () => {
+    await loadClientsIntoSelects();
+  });
+
+  async function loadClientsIntoSelects() {
+    try {
+      const response = await fetch("/api/clients");
+      if (response.ok) {
+        const clients = await response.json();
+        // If API returns object with 'clients' key or just array
+        const clientList = clients.clients ? clients.clients : clients;
+
+        const addSelect = document.getElementById("add_client_select");
+        const editSelect = document.getElementById("edit_client_select");
+
+        // Clear existing options (keep the first disabled one)
+        addSelect.innerHTML =
+          '<option value="" disabled selected>Select a Client...</option>';
+        editSelect.innerHTML =
+          '<option value="" disabled>Select a Client...</option>';
+
+        clientList.forEach((client) => {
+          clientMap[client.id] = client.full_name; // Store for lookup
+
+          const option = `<option value="${client.id}">${client.full_name}</option>`;
+          addSelect.innerHTML += option;
+          editSelect.innerHTML += option;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load clients", error);
+      showToast("Failed to load clients list", "error");
+    }
+  }
+
+  // --- Modal Functions ---
+  function openAddModal() {
+    document.getElementById("addModal").classList.remove("hidden");
+  }
+  function closeAddModal() {
+    document.getElementById("addModal").classList.add("hidden");
+  }
+
+  function openEditModal(
+    id,
+    clientId,
+    domain,
+    registrar,
+    domExpiry,
+    hostProvider,
+    ip,
+    port,
+    hostExpiry,
+    stack,
+    desc,
+    start,
+    end
+  ) {
+    document.getElementById("edit_service_id").value = id;
+    document.getElementById("edit_client_select").value = clientId;
+    document.getElementById("edit_domain_name").value = domain;
+    document.getElementById("edit_domain_registrar").value = registrar;
+    document.getElementById("edit_domain_expiry_date").value =
+      formatDateForInput(domExpiry);
+    document.getElementById("edit_hosting_provider").value = hostProvider;
+    document.getElementById("edit_server_ip").value = ip;
+    document.getElementById("edit_ssh_port").value = port;
+    document.getElementById("edit_hosting_expiry_date").value =
+      formatDateForInput(hostExpiry);
+    document.getElementById("edit_tech_stack").value = stack;
+    document.getElementById("edit_description").value = desc;
+    document.getElementById("edit_start_date").value =
+      formatDateForInput(start);
+
+    document.getElementById("editModal").classList.remove("hidden");
+  }
+
+  function closeEditModal() {
+    document.getElementById("editModal").classList.add("hidden");
+  }
+  function openDeleteModal(id) {
+    document.getElementById("delete_service_id").value = id;
+    document.getElementById("deleteModal").classList.remove("hidden");
+  }
+  function closeDeleteModal() {
+    document.getElementById("deleteModal").classList.add("hidden");
+  }
+
+  // --- Helpers ---
+  function formatDateForInput(dateStr) {
+    if (!dateStr || dateStr === "None") return "";
+    // If date comes as "YYYY-MM-DD HH:MM:SS" take first part
+    return dateStr.split(" ")[0];
+  }
+
+  function showToast(message, type = "success") {
+    const container = document.getElementById("toast-container");
+    const toast = document.createElement("div");
+    let bgClass =
+      type === "success"
+        ? "toast-success"
+        : type === "error"
+        ? "toast-error"
+        : "toast-warning";
+    let icon =
+      type === "success"
+        ? "<i class='fa-solid fa-check-circle'></i>"
+        : "<i class='fa-solid fa-triangle-exclamation'></i>";
+    toast.className = `toast ${bgClass}`;
+    toast.innerHTML = `${icon} <span>${message}</span>`;
+    container.appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add("show"));
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  function getRowInnerHtml(service) {
+    const domainExpiry = service.domain_expiry_date
+      ? `<div class="text-xs flex items-center gap-2 text-text-secondary"><i class="fa-solid fa-tag w-4"></i><span>Dom: ${service.domain_expiry_date}</span></div>`
+      : "";
+    const hostExpiry = service.hosting_expiry_date
+      ? `<div class="text-xs flex items-center gap-2 text-text-secondary"><i class="fa-solid fa-server w-4"></i><span>Host: ${service.hosting_expiry_date}</span></div>`
+      : "";
+    const expiryHtml =
+      domainExpiry || hostExpiry
+        ? domainExpiry + hostExpiry
+        : '<span class="text-text-secondary text-xs">-</span>';
+
+    const ipHtml = service.server_ip
+      ? `<div class="text-xs text-text-secondary mt-1 font-mono">${service.server_ip}:${service.ssh_port}</div>`
+      : "";
+    const stackHtml = service.tech_stack
+      ? `<span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-bg border border-border text-text-secondary">${service.tech_stack}</span>`
+      : '<span class="text-text-secondary text-xs">-</span>';
+
+    // Ensure we have client name. If server returned just ID, try to lookup in map, otherwise fallback
+    const clientName = service.client
+      ? service.client.full_name
+      : clientMap[service.client_id] || "Unknown";
+
+    return `
+            <td class="p-4 align-top">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-accent/10 text-accent flex items-center justify-center font-bold border border-accent/20 flex-shrink-0">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-text-primary group-hover:text-accent transition-colors">${
+                          service.domain_name
+                        }</h3>
+                        ${
+                          service.domain_registrar
+                            ? `<span class="text-xs text-text-secondary block">${service.domain_registrar}</span>`
+                            : ""
+                        }
+                    </div>
+                </div>
+            </td>
+            <td class="p-4 align-top">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-user-tie text-text-secondary text-xs"></i>
+                    <span class="text-text-primary font-medium">${clientName}</span>
+                </div>
+            </td>
+            <td class="p-4 align-top">
+                <div class="text-sm text-text-primary">${
+                  service.hosting_provider || "-"
+                }</div>
+                ${ipHtml}
+            </td>
+            <td class="p-4 align-top">
+                <div class="flex flex-col gap-1">${expiryHtml}</div>
+            </td>
+            <td class="p-4 align-middle">${stackHtml}</td>
+            <td class="p-4 align-middle text-right">
+                <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onclick="openEditModal('${service.id}', '${
+      service.client_id
+    }', '${service.domain_name}', '${service.domain_registrar || ""}', '${
+      service.domain_expiry_date || ""
+    }', '${service.hosting_provider || ""}', '${service.server_ip || ""}', '${
+      service.ssh_port
+    }', '${service.hosting_expiry_date || ""}', '${
+      service.tech_stack || ""
+    }', '${service.description || ""}', '${service.start_date}', '${
+      service.end_date || ""
+    }')" 
+                            class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white transition-all" title="Edit">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                    <button onclick="openDeleteModal('${
+                      service.id
+                    }')" class="w-8 h-8 rounded-lg flex items-center justify-center bg-danger/10 text-danger hover:bg-danger hover:text-white transition-all" title="Delete">
+                        <i class="fa-solid fa-trash text-xs"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+  }
+
+  // --- Submit Handlers ---
+  async function handleAddSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("/api/services", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const res = await response.json();
+
+      if (response.ok) {
+        closeAddModal();
+        event.target.reset();
+        showToast("Service added successfully!", "success");
+
+        // Update table
+        if (res.service) {
+          const tbody = document.querySelector("table tbody");
+          const tr = document.createElement("tr");
+          tr.id = `service-row-${res.service.id}`;
+          tr.className =
+            "group hover:bg-white/5 transition-colors duration-200";
+          tr.innerHTML = getRowInnerHtml(res.service);
+          tbody.prepend(tr);
+
+          // Update count
+          const countSpan = document.getElementById("services-length");
+          if (countSpan) {
+            const count = parseInt(countSpan.textContent.match(/\d+/)[0]) + 1;
+            countSpan.textContent = `Showing ${count} services`;
+          }
+        } else {
+          window.location.reload();
+        }
+      } else {
+        showToast(res.error || "Error adding service", "error");
+      }
+    } catch (error) {
+      console.error(error);
+      showToast("Failed to connect to server", "error");
+    }
+  }
+
+  async function handleEditSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("/api/services", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const res = await response.json();
+
+      if (response.ok) {
+        closeEditModal();
+        showToast("Service updated successfully!", "success");
+
+        const row = document.getElementById(`service-row-${data.id}`);
+        if (row) {
+          // Assuming API returns updated object in res.service
+          // If not, construct it or reload. Let's assume best case for SPA feel.
+          // Ideally we use the server response to ensure we show what was saved.
+          // Fallback to local data + lookups if server response is partial.
+          const updatedService = res.service || data;
+          row.innerHTML = getRowInnerHtml(updatedService);
+
+          row.classList.add("bg-accent/10");
+          setTimeout(() => row.classList.remove("bg-accent/10"), 1000);
+        } else {
+          window.location.reload();
+        }
+      } else {
+        showToast(res.error || "Error updating service", "error");
+      }
+    } catch (error) {
+      console.error(error);
+      showToast("Failed to connect to server", "error");
+    }
+  }
+
+  async function handleDeleteSubmit(event) {
+    event.preventDefault();
+    const id = document.getElementById("delete_service_id").value;
+    try {
+      const response = await fetch(`/api/services?id=${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+      const res = await response.json();
+
+      closeDeleteModal();
+      if (response.ok) {
+        showToast("Service deleted successfully!", "success");
+        const row = document.getElementById(`service-row-${id}`);
+        if (row) row.remove();
+
+        const countSpan = document.getElementById("services-length");
+        if (countSpan) {
+          const count = Math.max(
+            0,
+            parseInt(countSpan.textContent.match(/\d+/)[0]) - 1
+          );
+          countSpan.textContent = `Showing ${count} services`;
+        }
+      } else {
+        showToast(res.error || "Error deleting service", "error");
+      }
+    } catch (error) {
+      console.error(error);
+      showToast("Failed to connect to server", "error");
+    }
+  }
+</script>
+{% endblock %}

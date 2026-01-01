@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{title}}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <script
+      src="https://kit.fontawesome.com/2b692842ad.js"
+      crossorigin="anonymous"
+    ></script>
+    <link
+      href="{{ url_for('static', filename='style.css') }}"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body class="bg-bg overflow-x-hidden transition-colors duration-300">
+    <nav
+      id="sidebar"
+      class="fixed top-0 left-0 h-screen bg-surface border-r border-border z-50 transition-all duration-300 ease-in-out w-64 data-[closed=true]:w-20 shadow-xl"
+    >
+      <header class="relative h-16 flex items-center px-4 pt-2">
+        <div
+          class="flex items-center gap-x-4 w-full overflow-hidden whitespace-nowrap"
+        >
+          <div
+            class="min-w-[40px] h-[40px] bg-bg/50 rounded-lg flex items-center justify-center text-accent text-xl"
+          >
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+
+          <div
+            class="flex flex-col transition-opacity duration-300 group-data-[closed=true]/nav:opacity-0"
+            id="logo-text"
+          >
+            <span class="text-lg font-bold text-text-primary leading-tight"
+              >CRM</span
+            >
+            <span class="text-xs text-text-secondary"
+              >Customers Management</span
+            >
+          </div>
+        </div>
+
+        <button
+          id="toggle-btn"
+          class="absolute -right-3 top-8 bg-accent text-bg w-6 h-6 rounded-full flex items-center justify-center cursor-pointer hover:bg-white hover:text-accent transition-colors shadow-lg z-50"
+        >
+          <i class="fa-solid fa-chevron-left text-xs"></i>
+        </button>
+      </header>
+
+      <div
+        class="mt-8 flex flex-col justify-between h-[calc(100vh-100px)] px-3"
+      >
+        <ul class="space-y-2">
+          <li>
+            <a
+              href="/"
+              class="flex items-center h-12 rounded-lg px-3 gap-x-4 transition-all duration-200 group {% if request.endpoint == 'main.index' %} bg-accent text-bg shadow-lg shadow-accent/20 {% else %} text-text-secondary hover:bg-bg hover:text-text-primary {% endif %}"
+            >
+              <i
+                class="fa-solid fa-house text-lg min-w-[24px] flex justify-center"
+              ></i>
+              <span
+                class="whitespace-nowrap overflow-hidden transition-all duration-300 group-hover:translate-x-1 font-bold"
+                id="link-text"
+                >Dashboard</span
+              >
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="/clients"
+              class="flex items-center h-12 rounded-lg px-3 gap-x-4 transition-all duration-200 group {% if request.endpoint == 'clients.clients' %} bg-accent text-bg shadow-lg shadow-accent/20 {% else %} text-text-secondary hover:bg-bg hover:text-text-primary {% endif %}"
+            >
+              <i
+                class="fa-solid fa-users text-lg min-w-[24px] flex justify-center"
+              ></i>
+              <span
+                class="whitespace-nowrap overflow-hidden transition-all duration-300 group-hover:translate-x-1 font-bold"
+                id="link-text"
+                >Clients</span
+              >
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="/services"
+              class="flex items-center h-12 rounded-lg px-3 gap-x-4 transition-all duration-200 group {% if request.endpoint == 'services.services' %} bg-accent text-bg shadow-lg shadow-accent/20 {% else %} text-text-secondary hover:bg-bg hover:text-text-primary {% endif %}"
+            >
+              <i
+                class="fa-solid fa-server text-lg min-w-[24px] flex justify-center"
+              ></i>
+              <span
+                class="whitespace-nowrap overflow-hidden transition-all duration-300 group-hover:translate-x-1 font-bold"
+                id="link-text"
+                >Services</span
+              >
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="/financials"
+              class="flex items-center h-12 rounded-lg px-3 gap-x-4 transition-all duration-200 group {% if request.endpoint == 'financials.financials' %} bg-accent text-bg shadow-lg shadow-accent/20 {% else %} text-text-secondary hover:bg-bg hover:text-text-primary {% endif %}"
+            >
+              <i
+                class="fa-solid fa-wallet text-lg min-w-[24px] flex justify-center"
+              ></i>
+              <span
+                class="whitespace-nowrap overflow-hidden transition-all duration-300 group-hover:translate-x-1 font-bold"
+                id="link-text"
+                >Financials</span
+              >
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <main
+      id="main-content"
+      class="min-h-screen p-8 transition-all duration-300 ease-in-out ml-64 data-[closed=true]:ml-20"
+    >
+      <div class="max-w-7xl mx-auto">{% block content %} {% endblock %}</div>
+    </main>
+
+    <script>
+      const sidebar = document.getElementById("sidebar");
+      const mainContent = document.getElementById("main-content");
+      const toggleBtn = document.getElementById("toggle-btn");
+      const icon = toggleBtn.querySelector("i");
+      const texts = document.querySelectorAll("#link-text, #logo-text");
+
+      function setSidebarState(isClosed) {
+        if (isClosed) {
+          sidebar.setAttribute("data-closed", "true");
+          mainContent.setAttribute("data-closed", "true");
+
+          // Rotate icon to point Right (indicating you can open it)
+          icon.style.transform = "rotate(180deg)";
+
+          texts.forEach((t) => t.classList.add("opacity-0", "invisible"));
+        } else {
+          sidebar.setAttribute("data-closed", "false");
+          mainContent.setAttribute("data-closed", "false");
+
+          // Reset icon to point Left
+          icon.style.transform = "rotate(0deg)";
+
+          setTimeout(() => {
+            texts.forEach((t) => t.classList.remove("opacity-0", "invisible"));
+          }, 150);
+        }
+      }
+
+      toggleBtn.addEventListener("click", () => {
+        const isClosed = sidebar.getAttribute("data-closed") === "true";
+        const newState = !isClosed;
+
+        setSidebarState(newState);
+        localStorage.setItem("sidebar-closed", newState);
+      });
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const savedState = localStorage.getItem("sidebar-closed") === "true";
+        setSidebarState(savedState);
+      });
+    </script>
+  </body>
+</html>
